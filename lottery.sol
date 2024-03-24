@@ -162,4 +162,38 @@ contract lottery is CommitReveal {
         delete players;
         participants = 0;
     }
+
+    function timeLeft()
+        public
+        view
+        returns (string memory stage, uint256 time)
+    {
+        if (deadlineCommit == 0) {
+            return ("No player in room", 0);
+        }
+        if (block.timestamp < deadlineCommit) {
+            return ("Commit end in (s)", deadlineCommit - block.timestamp);
+        }
+        if (
+            block.timestamp > deadlineCommit && block.timestamp < deadlineReveal
+        ) {
+            return ("Reveal end in (s)", deadlineReveal - block.timestamp);
+        }
+        if (
+            block.timestamp > deadlineReveal &&
+            block.timestamp < deadlineFindWinner
+        ) {
+            return (
+                "Find winner (by Owner) (s)",
+                deadlineFindWinner - block.timestamp
+            );
+        }
+        if (block.timestamp > deadlineFindWinner) {
+            return ("Retrive money", 0);
+        }
+    }
+
+    function balance() public view onlyOwner returns (uint) {
+        return address(this).balance;
+    }
 }
