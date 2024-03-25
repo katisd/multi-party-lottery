@@ -61,16 +61,6 @@ contract lottery is CommitReveal {
         commit(hashChoice);
     }
 
-    function removePlayer() internal {
-        bool checkPlayer;
-        uint256 playerIndex;
-        (checkPlayer, playerIndex) = isPlayer();
-        require(playerIndex < players.length && checkPlayer == true);
-        // move to last then pop last array
-        players[playerIndex] = players[players.length - 1];
-        players.pop();
-    }
-
     function revealChoice(
         uint256 ans,
         string memory salt
@@ -87,11 +77,10 @@ contract lottery is CommitReveal {
         // Reveal
         revealAnswer(ans, salt);
         if (ans > 999) {
-            removePlayer();
             return
                 "You are out of game, since your choice are out of range [0-999]";
         } else {
-            players[playerIndex].choice = ans + 1;
+            players[playerIndex].choice = ans;
             players[playerIndex].isReveal = true;
             return "Your answer are reveal successfully";
         }
@@ -113,16 +102,16 @@ contract lottery is CommitReveal {
         // find index of winner
         uint256 winner;
         for (uint256 i = 0; i < players.length; i++) {
-            if (players[i].choice == 0) {
+            if (players[i].isReveal == false) {
                 continue;
             }
             playerNum += 1;
             if (isThereArePlayer == false) {
                 isThereArePlayer = true;
-                winner = players[i].choice - 1;
+                winner = players[i].choice;
                 continue;
             }
-            winner = winner & (players[i].choice - 1);
+            winner = winner & players[i].choice;
         }
         address payable ownerAddress = payable(owner);
         if (isThereArePlayer) {
@@ -130,7 +119,7 @@ contract lottery is CommitReveal {
             // find player that's not cheat and in (winner) position
             playerNum = 0;
             for (uint256 i = 0; i < players.length; i++) {
-                if (players[i].choice == 0) {
+                if (players[i].isReveal == false) {
                     continue;
                 }
                 if (playerNum == winner) {
