@@ -152,6 +152,32 @@ contract lottery is CommitReveal {
         participants = 0;
     }
 
+    function removePlayer() internal {
+        bool checkPlayer;
+        uint256 playerIndex;
+        (checkPlayer, playerIndex) = isPlayer();
+        require(playerIndex < players.length && checkPlayer == true);
+        // move to last then pop last array
+        players[playerIndex] = players[players.length - 1];
+        players.pop();
+    }
+
+    function retrieveMoney() public {
+        // check time
+        require(block.timestamp > deadlineFindWinner);
+        // check is player
+        uint256 index;
+        (, index) = isPlayer();
+
+        removePlayer();
+        if (players.length == 0) {
+            resetGame();
+        }
+
+        address payable account = payable(msg.sender);
+        account.transfer(0.001 ether);
+    }
+
     function timeLeft()
         public
         view
