@@ -1,36 +1,60 @@
 # multi-party-lottery
 
-A multiple party lottery in solidity language. Each players put a number between 0-999 with 0.001 ether in this contract, and the lucky one will get all the money.(after 2% charge and gas fee)
+A multiple party lottery implemented in Solidity. Players contribute 0.001 ether along with a number between 0-999, and the winner receives all the contributed funds (after deducting a 2% charge and gas fees).
 
-| **Note**: This repository is a assignment workshop for class in Kasetsart university.
+| **Note**: This repository serves as an assignment workshop for a class at Kasetsart University.
+
+# Table of Contents
+
+1. [How to Play](#how-to-play)
+   - [Deploying the Contract](#deploying-the-contract)
+   - [Commit Stage](#commit-stage)
+   - [Reveal Stage](#reveal-stage)
+   - [Find Winner Stage](#find-winner-stage)
+   - [Retrieve Money Stage](#retrieve-money-stage)
+2. [More About the Code](#more-about-the-code)
+   - [Commit Stage](#commit-stage-1)
+   - [Reveal Stage](#reveal-stage-1)
+   - [Find Winner Stage](#find-winner-stage-1)
+   - [Retrieve Money Stage](#retrieve-money-stage-1)
+3. [Conclusion](#conclusion)
 
 ## How to Play
 
-1. Deploy a contracts. With maximum number of player(n), interval time for commit(n1), reveal(n2) and find winner(n3)
+1. **Deploying the Contract**: Deploy the contract with the desired parameters:
 
-2. Commit stage: Each player commit their hashed choice(number between 0-999) along with their bid 0.001 ether.
+   - Number of players (n)
+   - Interval time for committing (n1)
+   - Interval time for revealing (n2)
+   - Interval time for finding the winner (n3)
 
-   - After n1 time the contract will enter reveal stage so player can't enter game anymore.
-   - Each player can commit 1 choice in each game.
+2. **Commit Stage**:
 
-3. Reveal Stage: Each player reveal the choice they've committed.
+   - Players commit their hashed choice (a number between 0-999) along with 0.001 ether.
+   - After n1 time, the contract enters the reveal stage, and no more players can join.
+   - Each player can commit only once per game.
 
-   - Those who didn't reveal their answer in time(t1+t2 after first player commit) will not be considered as winner candidate.
-   - Those who enter an invalid choice(not a number between 0-999) will not be considered as winner candidate.
+3. **Reveal Stage**:
 
-4. Find Winner Stage: The contract owner will call function to find winner and transfer money with 2% fee to owner.
+   - Players reveal their committed choices.
+   - Players who fail to reveal their answer in time (t1+t2 after the first player commits) will not be considered as winner candidates.
+   - Invalid choices (not a number between 0-999) will disqualify players from winning.
 
-   - If the contract owner don't call function in time(t1+t2+t3 after first player commit) game will enter stage 5.
+4. **Find Winner Stage**:
 
-5. Retrieve Money stage: Each player(Include those who didn't reveal or put an invalid choice) can call `retriveMoney` to get their 0.001 ether back.
+   - The contract owner calls the `findWinner` function to determine the winner and transfer the funds.
+   - The owner receives a 2% fee, and the remaining 98% goes to the winner.
+   - If the owner fails to call the function in time (t1+t2+t3 after the first player commits), the game proceeds to the next stage.
 
-   - This contract will reset game after every player retrieve their money back
+5. **Retrieve Money Stage**:
+   - Players (including those who didn't reveal or provided invalid choices) can call `retrieveMoney` to reclaim their 0.001 ether.
+   - The game resets after all players retrieve their funds.
 
-## More About Code
+## More About the Code
 
-1. In commit stage. Player will call `commitChoice`
-   - Each player can commit once in each game
-   - After first player commit their choice, deadline for each stage will be set
+1. **Commit Stage**:
+   - Players call `commitChoice` to commit their choice.
+   - Deadlines for each stage are set after the first player commits.
 
 ```js
     function commitChoice(bytes32 hashChoice) public payable {
@@ -54,8 +78,10 @@ A multiple party lottery in solidity language. Each players put a number between
     }
 ```
 
-2. In reveal stage. Player will call `revealChoice` along with their answer and salt.
-   - If answer is invalid (ans>999). Player will not be considered as winner candidate.
+2. **Reveal Stage**:
+
+   - Players call revealChoice with their answer and salt.
+   - Invalid answers disqualify players from winning.
 
 ```js
     function revealChoice(
@@ -84,9 +110,11 @@ A multiple party lottery in solidity language. Each players put a number between
     }
 ```
 
-3. In find winner stage. Contract owner have to call a `findWinner`
-   - This function find a winner by using hash of xor of choice from player. Owner will get 2% of reward and the winner will be get 98% of reward.
-   - If there are no winner since every player are nor winner candidate. Reward will be transfer to contract owner.
+3. **Find Winner Stage:**:
+
+   - The contract owner calls findWinner to determine the winner.
+   - The winner receives 98% of the funds, and the owner receives 2%.
+   - If no valid winner is found, funds are transferred to the owner.
 
 ```js
 function findWinner() public onlyOwner returns (string memory, uint) {
@@ -143,3 +171,29 @@ function findWinner() public onlyOwner returns (string memory, uint) {
     }
 
 ```
+
+4. **Retrieve Money Stage:**:
+
+   - Players call retrieveMoney to reclaim their funds.
+
+```js
+    function retrieveMoney() public {
+        // check time
+        require(block.timestamp > deadlineFindWinner);
+        // check is player
+        uint256 index;
+        (, index) = isPlayer();
+
+        removePlayer();
+        if (players.length == 0) {
+            resetGame();
+        }
+
+        address payable account = payable(msg.sender);
+        account.transfer(0.001 ether);
+    }
+```
+
+## Conclusion
+
+The multi-party lottery contract provides an engaging and transparent way for multiple players to participate in a lottery game on the Ethereum blockchain. Players can easily interact with the contract using the provided functions, and the code is designed to ensure fairness and security throughout the game.
