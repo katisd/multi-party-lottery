@@ -77,6 +77,10 @@ contract lottery is CommitReveal {
         // Reveal
         revealAnswer(ans, salt);
         if (ans > 999) {
+            address payable playerAddress =payable(players[playerIndex].addr)
+            address payable winnerAccount = payable(players[winner].addr);
+            playerAddress.transfer(0.00098 ether);
+            ownerAddress.transfer(0.00002 ether);
             return
                 "You are out of game, since your choice are out of range [0-999]";
         } else {
@@ -103,6 +107,12 @@ contract lottery is CommitReveal {
         uint256 winner;
         for (uint256 i = 0; i < players.length; i++) {
             if (players[i].isReveal == false) {
+                address payable playerAddress =payable(players[i].addr)
+                players[i] = players[players.length - 1];
+                players.pop();
+                removePlayer();
+                playerAddress.transfer(0.00098 ether);
+                ownerAddress.transfer(0.00002 ether);
                 continue;
             }
             playerNum += 1;
@@ -117,21 +127,21 @@ contract lottery is CommitReveal {
         if (isThereArePlayer) {
             winner = uint(keccak256(abi.encodePacked(winner))) % playerNum;
             // find player that's not cheat and in (winner) position
-            playerNum = 0;
-            for (uint256 i = 0; i < players.length; i++) {
-                if (players[i].isReveal == false) {
-                    continue;
-                }
-                if (playerNum == winner) {
-                    winner = i;
-                    break;
-                }
-                playerNum += 1;
-            }
+            // playerNum = 0;
+            // for (uint256 i = 0; i < players.length; i++) {
+            //     if (players[i].isReveal == false) {
+            //         continue;
+            //     }
+            //     if (playerNum == winner) {
+            //         winner = i;
+            //         break;
+            //     }
+            //     playerNum += 1;
+            // }
             address payable winnerAccount = payable(players[winner].addr);
             // winnerAccount.transfer(0.01*participants*0.98 ether);
-            uint reward = ((participants * 98) * 1e18) / 1e5;
-            uint ownerReward = ((participants * 2) * 1e18) / 1e5;
+            uint reward = ((players.lenght * 98) * 1e18) / 1e5;
+            uint ownerReward = ((players.lenght * 2) * 1e18) / 1e5;
 
             resetGame();
 
