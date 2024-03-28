@@ -77,10 +77,10 @@ contract lottery is CommitReveal {
         // Reveal
         revealAnswer(ans, salt);
         if (ans > 999) {
-            address payable playerAddress =payable(players[playerIndex].addr)
-            address payable winnerAccount = payable(players[winner].addr);
+            address payable playerAddress = payable(players[playerIndex].addr);
+            address payable ownerAccount = payable(owner);
             playerAddress.transfer(0.00098 ether);
-            ownerAddress.transfer(0.00002 ether);
+            ownerAccount.transfer(0.00002 ether);
             return
                 "You are out of game, since your choice are out of range [0-999]";
         } else {
@@ -105,9 +105,10 @@ contract lottery is CommitReveal {
         uint playerNum = 0;
         // find index of winner
         uint256 winner;
+        address payable ownerAddress = payable(owner);
         for (uint256 i = 0; i < players.length; i++) {
             if (players[i].isReveal == false) {
-                address payable playerAddress =payable(players[i].addr)
+                address payable playerAddress = payable(players[i].addr);
                 players[i] = players[players.length - 1];
                 players.pop();
                 removePlayer();
@@ -123,7 +124,6 @@ contract lottery is CommitReveal {
             }
             winner = winner & players[i].choice;
         }
-        address payable ownerAddress = payable(owner);
         if (isThereArePlayer) {
             winner = uint(keccak256(abi.encodePacked(winner))) % playerNum;
             // find player that's not cheat and in (winner) position
@@ -140,8 +140,8 @@ contract lottery is CommitReveal {
             // }
             address payable winnerAccount = payable(players[winner].addr);
             // winnerAccount.transfer(0.01*participants*0.98 ether);
-            uint reward = ((players.lenght * 98) * 1e18) / 1e5;
-            uint ownerReward = ((players.lenght * 2) * 1e18) / 1e5;
+            uint reward = ((players.length * 98) * 1e18) / 1e5;
+            uint ownerReward = ((players.length * 2) * 1e18) / 1e5;
 
             resetGame();
 
